@@ -220,6 +220,51 @@ class TestRunController {
   }
 
   /**
+   * Get test run artifacts
+   * GET /api/artifacts/:runId
+   */
+  async getArtifacts(req, res) {
+    try {
+      const { runId } = req.params;
+
+      // Get run metadata
+      const metadata = this.activeRuns.get(runId);
+      if (!metadata) {
+        return res.status(404).json({
+          success: false,
+          error: 'Test run not found'
+        });
+      }
+
+      const { owner, repo, workflowRunId } = metadata;
+
+      // Fetch artifacts from GitHub
+      const artifactsResult = await this.githubService.getWorkflowArtifacts(
+        owner,
+        repo,
+        workflowRunId
+      );
+
+      return res.status(200).json({
+        success: true,
+        data: {
+          runId,
+          workflowRunId,
+          artifacts: artifactsResult.artifacts,
+          repoUrl: `https://github.com/${owner}/${repo}`
+        }
+      });
+
+    } catch (error) {
+      console.error('Error fetching artifacts:', error);
+      return res.status(500).json({
+        success: false,
+        error: error.message || 'Failed to fetch artifacts'
+      });
+    }
+  }
+
+  /**
    * List all test runs
    * GET /api/runs
    */

@@ -61,6 +61,11 @@ class SeleniumScriptRequest(BaseModel):
     test_case: Dict[str, Any]
 
 
+class GitHubActionsRequest(BaseModel):
+    test_id: str
+    script: str
+
+
 class StatusResponse(BaseModel):
     status: str
     message: str
@@ -402,51 +407,46 @@ async def reset_system():
 
 
 @app.post("/run_selenium_on_github")
-async def run_selenium_on_github(request: SeleniumScriptRequest):
+async def run_selenium_on_github(request: GitHubActionsRequest):
     """
-    Generate Selenium script and run it on GitHub Actions.
+    Run pre-generated Selenium script on GitHub Actions.
     
     Args:
-        request: SeleniumScriptRequest with test_case details
+        request: GitHubActionsRequest with test_id and script
     
     Returns:
         GitHub Actions run information
     """
-    global rag_pipeline, html_data
-    
-    if not rag_pipeline:
-        raise HTTPException(status_code=500, detail="RAG pipeline not initialized")
-    
     try:
-        # Generate Selenium script using existing RAG pipeline
-        html_elements = html_data.get('elements') if html_data else None
-        script = rag_pipeline.generate_selenium_script(
-            request.test_case,
-            html_elements
-        )
-        
         # Send to Node.js GitHub Actions backend
         node_backend_url = "http://localhost:5000/api/create-test-run"
         
         response = requests.post(
             node_backend_url,
             json={
-                "testScript": script,
-                "testName": request.test_case.get('test_id', 'selenium-test'),
-                "repoName": f"selenium-test-{request.test_case.get('test_id', 'default')}"
+                "testScript": request.script,
+                "testName": request.test_id,
+                "repoName": f"selenium-test-{request.test_id}"
             },
             timeout=30
         )
         
         if response.status_code == 201:
             result = response.json()
-            logger.info(f"GitHub Actions run created: {result['data']['runId']}")
+            data = result['data']
+            logger.info(f"GitHub Actions run created: {data['runId']}")
+            
+            # Fallback to repo URL if workflow URL is not available yet
+            workflow_url = data.get('workflowUrl') or f"{data.get('repoUrl', '')}/actions"
             
             return {
                 "status": "success",
                 "message": "Test execution started on GitHub Actions",
-                "github_run": result['data'],
-                "script_preview": script[:500] + "..." if len(script) > 500 else script
+                "run_id": data['runId'],
+                "repository": data['repository'],
+                "workflow_url": workflow_url,
+                "workflow_run_id": data.get('workflowRunId'),
+                "script_preview": request.script[:500] + "..." if len(request.script) > 500 else request.script
             }
         else:
             raise HTTPException(
@@ -480,7 +480,11 @@ async def get_github_run_status(run_id: str):
         response = requests.get(node_backend_url, timeout=10)
         
         if response.status_code == 200:
-            return response.json()
+            result = response.json()
+            # Flatten the response for easier access
+            if result.get('success') and 'data' in result:
+                return result['data']
+            return result
         else:
             raise HTTPException(
                 status_code=response.status_code,
@@ -513,11 +517,52 @@ async def get_github_run_logs(run_id: str):
         response = requests.get(node_backend_url, timeout=10)
         
         if response.status_code == 200:
-            return response.json()
+            result = response.json()
+            # Flatten the response for easier access
+            if result.get('success') and 'data' in result:
+                return result['data']
+            return result
         else:
             raise HTTPException(
                 status_code=response.status_code,
                 detail=f"Failed to fetch logs: {response.text}"
+            )
+            
+    except requests.exceptions.ConnectionError:
+        raise HTTPException(
+            status_code=503,
+            detail="GitHub Actions backend not available"
+        )
+    except Exception as e:
+        logger.error(f"Error fetching GitHub run logs: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/github_run_artifacts/{run_id}")
+async def get_github_run_artifacts(run_id: str):
+    """
+    Get artifacts from a GitHub Actions test run.
+    
+    Args:
+        run_id: Test run identifier
+    
+    Returns:
+        Artifact information and download URLs
+    """
+    try:
+        node_backend_url = f"http://localhost:5000/api/artifacts/{run_id}"
+        response = requests.get(node_backend_url, timeout=10)
+        
+        if response.status_code == 200:
+            result = response.json()
+            # Flatten the response for easier access
+            if result.get('success') and 'data' in result:
+                return result['data']
+            return result
+        else:
+            raise HTTPException(
+                status_code=response.status_code,
+                detail=f"Failed to fetch artifacts: {response.text}"
             )
             
     except requests.exceptions.ConnectionError:

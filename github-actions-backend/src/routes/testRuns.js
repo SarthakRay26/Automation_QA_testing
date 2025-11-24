@@ -41,6 +41,16 @@ router.get('/logs/:runId', (req, res) => {
 });
 
 /**
+ * @route   GET /api/artifacts/:runId
+ * @desc    Get artifacts for a test run
+ * @param   runId - Test run identifier
+ * @returns { artifacts: Array, repoUrl }
+ */
+router.get('/artifacts/:runId', (req, res) => {
+  controller.getArtifacts(req, res);
+});
+
+/**
  * @route   GET /api/runs
  * @desc    List all test runs
  * @returns { runs: Array, count: number }

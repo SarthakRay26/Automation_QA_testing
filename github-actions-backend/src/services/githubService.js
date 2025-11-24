@@ -326,6 +326,38 @@ class GitHubService {
   }
 
   /**
+   * Get workflow run artifacts
+   * @param {string} owner - Repository owner
+   * @param {string} repo - Repository name
+   * @param {number} runId - Workflow run ID
+   * @returns {Promise<Object>} Artifacts information
+   */
+  async getWorkflowArtifacts(owner, repo, runId) {
+    try {
+      const response = await axios.get(
+        `${this.apiBase}/repos/${owner}/${repo}/actions/runs/${runId}/artifacts`,
+        { headers: this.headers }
+      );
+
+      const artifacts = response.data.artifacts.map(artifact => ({
+        id: artifact.id,
+        name: artifact.name,
+        size: artifact.size_in_bytes,
+        url: artifact.archive_download_url,
+        createdAt: artifact.created_at,
+        expiresAt: artifact.expires_at
+      }));
+
+      return {
+        success: true,
+        artifacts: artifacts
+      };
+    } catch (error) {
+      throw this.handleError(error, 'Failed to fetch artifacts');
+    }
+  }
+
+  /**
    * Delete a repository
    * @param {string} owner - Repository owner
    * @param {string} repo - Repository name

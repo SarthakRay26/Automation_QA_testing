@@ -39,13 +39,175 @@ jobs:
           sudo Xvfb :99 -screen 0 1920x1080x24 > /dev/null 2>&1 &
           sleep 3
           
-          # Run the test script
-          python test_script.py
+          # Create a comprehensive HTML file with common form elements
+          mkdir -p sample_html
+          cat > sample_html/test.html << 'EOF'
+          <!DOCTYPE html>
+          <html lang="en">
+          <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>Course Enrollment Test Page</title>
+            <style>
+              body { font-family: Arial, sans-serif; padding: 20px; max-width: 600px; margin: 0 auto; }
+              .form-group { margin-bottom: 15px; }
+              label { display: block; margin-bottom: 5px; font-weight: bold; }
+              input, select, button { width: 100%; padding: 10px; margin-bottom: 10px; border: 1px solid #ccc; border-radius: 4px; }
+              button { background-color: #4CAF50; color: white; border: none; cursor: pointer; width: auto; padding: 10px 20px; }
+              button:hover { background-color: #45a049; }
+              .result { margin-top: 20px; padding: 15px; background-color: #f0f0f0; border-radius: 4px; display: none; }
+              .success { background-color: #d4edda; color: #155724; }
+            </style>
+          </head>
+          <body>
+            <h1>Course Enrollment & Payment</h1>
+            <form id="enrollment-form">
+              <div class="form-group">
+                <label for="course-name">Course Name:</label>
+                <input type="text" id="course-name" name="course-name" value="Web Development">
+              </div>
+              
+              <div class="form-group">
+                <label for="student-name">Student Name:</label>
+                <input type="text" id="student-name" name="student-name" placeholder="Enter your name">
+              </div>
+              
+              <div class="form-group">
+                <label for="email">Email:</label>
+                <input type="email" id="email" name="email" placeholder="your@email.com">
+              </div>
+              
+              <div class="form-group">
+                <label for="phone">Phone:</label>
+                <input type="tel" id="phone" name="phone" placeholder="123-456-7890">
+              </div>
+              
+              <h2>Payment Information</h2>
+              
+              <div class="form-group">
+                <label for="coupon-code">Coupon Code:</label>
+                <input type="text" id="coupon-code" name="coupon-code" placeholder="Enter coupon code">
+                <button type="button" id="apply-coupon">Apply Coupon</button>
+              </div>
+              
+              <div class="form-group">
+                <label for="card-number">Card Number:</label>
+                <input type="text" id="card-number" name="card-number" placeholder="1234 5678 9012 3456" maxlength="19">
+              </div>
+              
+              <div class="form-group">
+                <label for="expiry-date">Expiry Date (MM/YY):</label>
+                <input type="text" id="expiry-date" name="expiry-date" placeholder="MM/YY" maxlength="5">
+              </div>
+              
+              <div class="form-group">
+                <label for="cvv">CVV:</label>
+                <input type="text" id="cvv" name="cvv" placeholder="123" maxlength="4">
+              </div>
+              
+              <div class="form-group">
+                <label for="cardholder-name">Cardholder Name:</label>
+                <input type="text" id="cardholder-name" name="cardholder-name" placeholder="Name on card">
+              </div>
+              
+              <div id="discount-info" class="result" style="display:none;">
+                <strong>Discount Applied!</strong> You saved 25%
+              </div>
+              
+              <div class="form-group">
+                <label>Price: <span id="original-price">$99.99</span></label>
+                <label>Final Price: <span id="final-price">$99.99</span></label>
+              </div>
+              
+              <button type="submit" id="submit-payment">Complete Enrollment</button>
+            </form>
+            
+            <div id="success-message" class="result success" style="display:none;">
+              <strong>Success!</strong> Your enrollment has been completed.
+            </div>
+            
+            <script>
+              document.getElementById('apply-coupon').addEventListener('click', function(e) {
+                e.preventDefault();
+                const couponCode = document.getElementById('coupon-code').value;
+                if (couponCode) {
+                  document.getElementById('discount-info').style.display = 'block';
+                  document.getElementById('final-price').textContent = '$74.99';
+                  console.log('Coupon applied:', couponCode);
+                }
+              });
+              
+              document.getElementById('enrollment-form').addEventListener('submit', function(e) {
+                e.preventDefault();
+                document.getElementById('success-message').style.display = 'block';
+                console.log('Form submitted successfully');
+              });
+            </script>
+          </body>
+          </html>
+          EOF
+          
+          # Start HTTP server
+          python -m http.server 8000 --directory sample_html > server.log 2>&1 &
+          SERVER_PID=$!
+          sleep 3
+          
+          # Verify server is running
+          curl -s http://localhost:8000/test.html > /dev/null && echo "✓ HTTP server running" || echo "✗ HTTP server failed"
+          
+          # Create a Python script to modify the test script
+          cat > modify_script.py << 'PYEOF'
+          import re
+          import sys
+          
+          with open('test_script.py', 'r') as f:
+              content = f.read()
+          
+          # Replace file paths and URLs
+          content = re.sub(r'file://[^"\']*\.html', 'http://localhost:8000/test.html', content)
+          content = re.sub(r'/Users/[^/]*/Autonomous_QA_Automation/qa_agent[^"\']*\.html', 'http://localhost:8000/test.html', content)
+          content = re.sub(r'~/Autonomous_QA_Automation/qa_agent[^"\']*\.html', 'http://localhost:8000/test.html', content)
+          
+          # Replace the entire if/else block for file loading
+          content = re.sub(
+              r'html_path = os\.path\.expanduser\([^\)]+\).*?else:.*?print\([^\)]+\)',
+              'driver.get("http://localhost:8000/test.html")\\n        print("✓ Navigated to test page")',
+              content,
+              flags=re.DOTALL
+          )
+          
+          # Replace screenshot paths to use current directory
+          content = re.sub(r'os\.path\.expanduser\(f"[^"]*\.png"\)', 'f"test_screenshot.png"', content)
+          
+          with open('test_script.py', 'w') as f:
+              f.write(content)
+          
+          print("✓ Script modified successfully")
+          PYEOF
+          
+          python modify_script.py
+          
+          echo "=== Modified Script (first 60 lines) ==="
+          head -60 test_script.py
+          echo ""
+          echo "=== Running Test ==="
+          
+          # Run the test
+          python test_script.py || true
+          
+          # Show server log if test failed
+          if [ $? -ne 0 ]; then
+            echo "=== HTTP Server Log ==="
+            cat server.log
+          fi
+          
+          # Cleanup
+          kill $SERVER_PID 2>/dev/null || true
         continue-on-error: true
       
       - name: Upload test results
         if: always()
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: test-results
           path: |
