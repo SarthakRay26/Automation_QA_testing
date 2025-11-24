@@ -1,0 +1,54 @@
+name: Selenium Test Execution
+
+on:
+  workflow_dispatch:
+    inputs:
+      test_id:
+        description: 'Test Run ID'
+        required: false
+        default: 'test-run'
+
+jobs:
+  selenium-test:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: Set up Python 3.10
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+      
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install selenium webdriver-manager
+      
+      - name: Install Chrome and ChromeDriver
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y chromium-browser chromium-chromedriver
+      
+      - name: Run Selenium test
+        env:
+          DISPLAY: :99
+        run: |
+          # Start Xvfb for headless display
+          sudo Xvfb :99 -screen 0 1920x1080x24 > /dev/null 2>&1 &
+          sleep 3
+          
+          # Run the test script
+          python test_script.py
+        continue-on-error: true
+      
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: test-results
+          path: |
+            *.png
+            *.log
+          retention-days: 7
