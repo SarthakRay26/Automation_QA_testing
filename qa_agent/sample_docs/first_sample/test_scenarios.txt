@@ -1,0 +1,49 @@
+E-Commerce Checkout Test Scenarios
+
+Scenario 1: Valid Discount Code
+User enters valid discount code SAVE15
+Expected: 15% discount applied to order total
+Display: "Discount applied: $XX.XX saved"
+
+Scenario 2: Invalid Discount Code
+User enters invalid code "INVALID123"
+Expected: Error message displayed
+Message: "Invalid discount code. Please try again."
+
+Scenario 3: Complete Checkout Flow
+User fills all required fields correctly
+User applies valid discount code
+User submits payment information
+Expected: Order confirmation page displayed
+Expected: Confirmation email sent
+Expected: Order appears in user's order history
+
+Scenario 4: Missing Required Fields
+User attempts to submit with empty required fields
+Expected: Form submission prevented
+Expected: Error messages displayed for each missing field
+Expected: First invalid field receives focus
+
+Scenario 5: Credit Card Validation
+User enters invalid credit card number
+Expected: Real-time validation error
+Message: "Please enter a valid credit card number"
+User enters valid credit card
+Expected: Validation passes, no error message
+
+Scenario 6: Multiple Discount Codes
+User applies SAVE10 discount code
+User attempts to apply SAVE15 code
+Expected: Previous discount replaced with new discount
+Display: Updated total with SAVE15 discount
+
+Scenario 7: Payment Processing Timeout
+Payment gateway takes longer than 30 seconds
+Expected: User sees loading indicator
+Expected: Timeout message after 30 seconds
+Message: "Payment processing is taking longer than expected. Please wait..."
+
+Scenario 8: Expired Credit Card
+User enters credit card with past expiration date
+Expected: Validation error on expiry field
+Message: "Card has expired. Please use a valid card."

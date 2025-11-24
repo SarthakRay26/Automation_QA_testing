@@ -1,0 +1,355 @@
+{
+  "api_specification": {
+    "version": "1.0",
+    "base_url": "https://api.elearning.com/v1",
+    "authentication": "Bearer Token (JWT)",
+    "endpoints": [
+      {
+        "path": "/courses",
+        "method": "GET",
+        "description": "Get list of courses with filtering and pagination",
+        "query_parameters": {
+          "category": "string (optional)",
+          "level": "string (optional: beginner, intermediate, advanced)",
+          "price_min": "number (optional)",
+          "price_max": "number (optional)",
+          "search": "string (optional)",
+          "sort": "string (optional: popular, rating, newest, price_asc, price_desc)",
+          "page": "integer (default: 1)",
+          "limit": "integer (default: 12, max: 50)"
+        },
+        "responses": {
+          "200": {
+            "description": "List of courses retrieved",
+            "body": {
+              "courses": "array of course objects",
+              "total": "integer",
+              "page": "integer",
+              "pages": "integer"
+            }
+          }
+        }
+      },
+      {
+        "path": "/courses/{course_id}",
+        "method": "GET",
+        "description": "Get detailed course information",
+        "parameters": {
+          "course_id": "string (UUID)"
+        },
+        "responses": {
+          "200": {
+            "description": "Course details retrieved",
+            "body": {
+              "id": "uuid",
+              "title": "string",
+              "description": "string",
+              "instructor": {
+                "id": "uuid",
+                "name": "string",
+                "rating": "float"
+              },
+              "price": "number",
+              "level": "string",
+              "rating": "float",
+              "total_students": "integer",
+              "curriculum": "array of sections",
+              "language": "string",
+              "last_updated": "datetime"
+            }
+          },
+          "404": {
+            "description": "Course not found"
+          }
+        }
+      },
+      {
+        "path": "/courses",
+        "method": "POST",
+        "description": "Create a new course (instructor only)",
+        "authentication_required": true,
+        "required_role": "instructor",
+        "request_body": {
+          "title": "string (required, max 100 chars)",
+          "description": "string (required, max 5000 chars)",
+          "category": "string (required)",
+          "level": "string (required: beginner, intermediate, advanced)",
+          "price": "number (required, 0 for free)",
+          "language": "string (required)"
+        },
+        "responses": {
+          "201": {
+            "description": "Course created successfully",
+            "body": {
+              "course_id": "uuid",
+              "status": "draft"
+            }
+          },
+          "400": {
+            "description": "Validation error"
+          },
+          "403": {
+            "description": "Not authorized (not an instructor)"
+          }
+        }
+      },
+      {
+        "path": "/courses/{course_id}/enroll",
+        "method": "POST",
+        "description": "Enroll student in a course",
+        "authentication_required": true,
+        "parameters": {
+          "course_id": "string (UUID)"
+        },
+        "request_body": {
+          "coupon_code": "string (optional)"
+        },
+        "responses": {
+          "200": {
+            "description": "Enrolled successfully (free course)",
+            "body": {
+              "enrollment_id": "uuid",
+              "course_id": "uuid",
+              "enrolled_at": "datetime"
+            }
+          },
+          "402": {
+            "description": "Payment required (paid course)",
+            "body": {
+              "amount": "number",
+              "payment_url": "string"
+            }
+          },
+          "409": {
+            "description": "Already enrolled"
+          }
+        }
+      },
+      {
+        "path": "/courses/{course_id}/curriculum",
+        "method": "POST",
+        "description": "Add section/lecture to course curriculum (instructor only)",
+        "authentication_required": true,
+        "request_body": {
+          "type": "string (section or lecture)",
+          "title": "string (required)",
+          "description": "string (optional)",
+          "parent_section_id": "uuid (required for lectures)",
+          "video_url": "string (required for video lectures)",
+          "content": "string (for text lectures)",
+          "duration": "integer (seconds, for videos)"
+        },
+        "responses": {
+          "201": {
+            "description": "Curriculum item added"
+          },
+          "403": {
+            "description": "Not the course owner"
+          }
+        }
+      },
+      {
+        "path": "/quizzes",
+        "method": "POST",
+        "description": "Create a quiz for a lecture (instructor only)",
+        "authentication_required": true,
+        "request_body": {
+          "lecture_id": "uuid (required)",
+          "title": "string (required)",
+          "time_limit": "integer (minutes, optional)",
+          "passing_score": "integer (percentage, default 70)",
+          "max_attempts": "integer (default 3)",
+          "questions": "array of question objects"
+        },
+        "responses": {
+          "201": {
+            "description": "Quiz created"
+          }
+        }
+      },
+      {
+        "path": "/quizzes/{quiz_id}/submit",
+        "method": "POST",
+        "description": "Submit quiz answers",
+        "authentication_required": true,
+        "request_body": {
+          "answers": "array of {question_id, answer}"
+        },
+        "responses": {
+          "200": {
+            "description": "Quiz graded",
+            "body": {
+              "score": "integer (percentage)",
+              "passed": "boolean",
+              "correct_answers": "integer",
+              "total_questions": "integer",
+              "feedback": "array of feedback per question"
+            }
+          },
+          "429": {
+            "description": "Max attempts exceeded"
+          }
+        }
+      },
+      {
+        "path": "/enrollments/{enrollment_id}/progress",
+        "method": "GET",
+        "description": "Get student progress in a course",
+        "authentication_required": true,
+        "responses": {
+          "200": {
+            "description": "Progress retrieved",
+            "body": {
+              "completion_percentage": "integer",
+              "lectures_completed": "integer",
+              "total_lectures": "integer",
+              "quizzes_passed": "integer",
+              "total_quizzes": "integer",
+              "last_accessed": "datetime",
+              "time_spent": "integer (minutes)"
+            }
+          }
+        }
+      },
+      {
+        "path": "/lectures/{lecture_id}/progress",
+        "method": "POST",
+        "description": "Update lecture watch progress",
+        "authentication_required": true,
+        "request_body": {
+          "progress": "integer (seconds watched)",
+          "completed": "boolean"
+        },
+        "responses": {
+          "200": {
+            "description": "Progress updated"
+          }
+        }
+      },
+      {
+        "path": "/courses/{course_id}/reviews",
+        "method": "POST",
+        "description": "Submit course review",
+        "authentication_required": true,
+        "request_body": {
+          "rating": "integer (1-5, required)",
+          "review": "string (max 500 chars, optional)"
+        },
+        "responses": {
+          "201": {
+            "description": "Review submitted"
+          },
+          "403": {
+            "description": "Must be enrolled to review"
+          },
+          "409": {
+            "description": "Already reviewed"
+          }
+        }
+      },
+      {
+        "path": "/courses/{course_id}/reviews",
+        "method": "GET",
+        "description": "Get course reviews",
+        "query_parameters": {
+          "stars": "integer (optional, filter by rating)",
+          "page": "integer (default: 1)",
+          "limit": "integer (default: 10)"
+        },
+        "responses": {
+          "200": {
+            "description": "Reviews retrieved",
+            "body": {
+              "average_rating": "float",
+              "total_reviews": "integer",
+              "rating_distribution": {
+                "5_stars": "integer",
+                "4_stars": "integer",
+                "3_stars": "integer",
+                "2_stars": "integer",
+                "1_star": "integer"
+              },
+              "reviews": "array of review objects"
+            }
+          }
+        }
+      },
+      {
+        "path": "/certificates/{enrollment_id}",
+        "method": "GET",
+        "description": "Get course completion certificate",
+        "authentication_required": true,
+        "responses": {
+          "200": {
+            "description": "Certificate details",
+            "body": {
+              "certificate_id": "uuid",
+              "student_name": "string",
+              "course_title": "string",
+              "completion_date": "date",
+              "certificate_url": "string (PDF download)"
+            }
+          },
+          "403": {
+            "description": "Course not completed (< 80%)"
+          }
+        }
+      },
+      {
+        "path": "/coupons/validate",
+        "method": "POST",
+        "description": "Validate coupon code",
+        "request_body": {
+          "course_id": "uuid",
+          "coupon_code": "string"
+        },
+        "responses": {
+          "200": {
+            "description": "Coupon valid",
+            "body": {
+              "discount_type": "string (percentage or fixed)",
+              "discount_value": "number",
+              "final_price": "number"
+            }
+          },
+          "400": {
+            "description": "Invalid or expired coupon"
+          }
+        }
+      },
+      {
+        "path": "/instructor/dashboard",
+        "method": "GET",
+        "description": "Get instructor analytics dashboard",
+        "authentication_required": true,
+        "required_role": "instructor",
+        "responses": {
+          "200": {
+            "description": "Dashboard data",
+            "body": {
+              "total_courses": "integer",
+              "total_students": "integer",
+              "total_revenue": "number",
+              "pending_withdrawals": "number",
+              "courses": "array of course analytics"
+            }
+          }
+        }
+      }
+    ],
+    "rate_limits": {
+      "authenticated": "1000 requests per hour",
+      "unauthenticated": "100 requests per hour"
+    },
+    "error_codes": {
+      "2001": "Course not found",
+      "2002": "Already enrolled in course",
+      "2003": "Course is full (max capacity reached)",
+      "2004": "Payment required",
+      "2005": "Invalid coupon code",
+      "2006": "Quiz attempt limit exceeded",
+      "2007": "Course completion requirement not met",
+      "2008": "Not authorized to modify course"
+    }
+  }
+}

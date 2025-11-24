@@ -1,0 +1,102 @@
+# Instructions and private files
+instructions.txt
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+PIPFILE.lock
+
+# Virtual Environment
+venv/
+ENV/
+env/
+.venv
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# Logs
+*.log
+nohup.out
+/tmp/
+
+# Test outputs
+test_*.png
+*_success.png
+*_failure.png
+
+# ChromeDriver
+chromedriver
+*.exe
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+
+# ChromaDB
+qa_agent/backend/chroma_db/
+
+# Uploaded files
+qa_agent/assets/uploads/*
+!qa_agent/assets/uploads/.gitkeep
+
+# API keys and secrets
+*.key
+*.pem
+secrets.json
+config.json
+
+# Coverage reports
+htmlcov/
+.tox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+
+# PyCharm
+.idea/
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Temporary files
+*.tmp
+*.bak
+*.swp

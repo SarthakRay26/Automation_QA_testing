@@ -1,0 +1,14 @@
+fastapi
+uvicorn
+streamlit
+chromadb
+sentence-transformers
+beautifulsoup4
+pymupdf
+selenium
+python-dotenv
+langchain
+transformers
+torch
+requests
+pydantic

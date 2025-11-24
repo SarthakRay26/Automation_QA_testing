@@ -1,0 +1,235 @@
+USER MANAGEMENT SYSTEM - TEST SCENARIOS
+========================================
+
+TEST SCENARIO 1: Successful User Registration
+----------------------------------------------
+Preconditions: User is on registration page, email is not already registered
+Test Steps:
+  1. Enter valid username "testuser123"
+  2. Enter valid email "testuser@example.com"
+  3. Enter valid password "SecurePass123!"
+  4. Enter matching password confirmation
+  5. Enter full name "Test User"
+  6. Check "Accept Terms & Conditions" checkbox
+  7. Click "Register" button
+Expected Results:
+  - User account is created in database
+  - HTTP 201 status code returned
+  - Verification email sent to testuser@example.com
+  - User redirected to "Verify Email" page
+  - Success message displayed: "Account created! Please check your email."
+Priority: HIGH
+Test Data: username=testuser123, email=testuser@example.com, password=SecurePass123!
+
+TEST SCENARIO 2: Registration with Weak Password
+-------------------------------------------------
+Preconditions: User is on registration page
+Test Steps:
+  1. Enter username "weakpass"
+  2. Enter email "weak@example.com"
+  3. Enter weak password "12345"
+  4. Click "Register" button
+Expected Results:
+  - Registration fails with HTTP 400
+  - Error message displayed: "Password must be at least 8 characters and include uppercase, number, and special character"
+  - Password field is highlighted in red
+  - Form remains on registration page
+  - No account created in database
+Priority: MEDIUM
+Test Data: weak_passwords = ["12345", "password", "abcdefgh", "ABCDEFGH", "NoNumber!", "nospecial1A"]
+
+TEST SCENARIO 3: Login with Valid Credentials
+----------------------------------------------
+Preconditions: User account exists and is verified
+Test Steps:
+  1. Navigate to login page
+  2. Enter email "john.doe@example.com"
+  3. Enter correct password "MyPassword123!"
+  4. Check "Remember Me" checkbox
+  5. Click "Login" button
+Expected Results:
+  - HTTP 200 response with JWT access_token
+  - User redirected to dashboard
+  - Welcome message: "Welcome back, John!"
+  - Session created with 30-day expiration (due to Remember Me)
+  - Last login timestamp updated in database
+Priority: HIGH
+Test Data: email=john.doe@example.com, password=MyPassword123!
+
+TEST SCENARIO 4: Account Lockout After Failed Login Attempts
+-------------------------------------------------------------
+Preconditions: User account exists
+Test Steps:
+  1. Attempt login with email "jane@example.com" and wrong password
+  2. Repeat wrong password login 4 more times (5 total failed attempts)
+  3. Attempt login with correct password on 6th try
+Expected Results:
+  - First 5 attempts return HTTP 401 with error message
+  - 6th attempt returns HTTP 423 "Account Locked"
+  - Error message: "Account locked due to too many failed attempts. Try again in 15 minutes."
+  - Account status in database changed to "locked"
+  - Email notification sent to jane@example.com about lockout
+  - Correct password does not work while locked
+Priority: HIGH
+Test Data: email=jane@example.com, wrong_password=WrongPass123!, correct_password=CorrectPass456!
+
+TEST SCENARIO 5: Admin Changes User Role
+-----------------------------------------
+Preconditions: Logged in as admin user, target user exists with role "regular"
+Test Steps:
+  1. Admin searches for user "alice_smith"
+  2. Opens user profile
+  3. Clicks "Change Role" button
+  4. Selects "premium" from role dropdown
+  5. Enters reason: "Upgraded to premium"
+  6. Clicks "Confirm"
+Expected Results:
+  - HTTP 200 response
+  - User alice_smith role updated to "premium" in database
+  - Success notification: "Role updated to premium"
+  - Activity logged in audit trail
+  - Email sent to alice_smith about role change
+  - User gains access to premium features immediately
+Priority: MEDIUM
+Test Data: admin_email=admin@example.com, target_user=alice_smith, new_role=premium
+
+TEST SCENARIO 6: Profile Update with Valid Data
+------------------------------------------------
+Preconditions: User is logged in
+Test Steps:
+  1. Navigate to "Edit Profile" page
+  2. Update full name to "Jane Elizabeth Doe"
+  3. Update bio to "Software engineer passionate about testing"
+  4. Update phone to "+1-555-0123"
+  5. Set profile visibility to "Friends Only"
+  6. Click "Save Changes"
+Expected Results:
+  - HTTP 200 response
+  - Success message: "Profile updated successfully"
+  - All fields saved in database
+  - Profile page shows updated information
+  - Privacy settings applied (profile visible only to friends)
+  - Last updated timestamp refreshed
+Priority: MEDIUM
+Test Data: new_name="Jane Elizabeth Doe", new_bio="Software engineer passionate about testing"
+
+TEST SCENARIO 7: Email Verification with Valid Code
+----------------------------------------------------
+Preconditions: User registered but email not verified
+Test Steps:
+  1. User receives 6-digit verification code via email (e.g., "482931")
+  2. Navigate to email verification page
+  3. Enter verification code "482931"
+  4. Click "Verify Email" button
+Expected Results:
+  - HTTP 200 response
+  - Email verified flag set to true in database
+  - Success message: "Email verified successfully!"
+  - User redirected to dashboard
+  - Full account features unlocked
+  - Verification code marked as used/expired
+Priority: HIGH
+Test Data: verification_code=482931, email=newuser@example.com
+
+TEST SCENARIO 8: User Search by Username (Admin)
+-------------------------------------------------
+Preconditions: Logged in as admin, multiple users exist in system
+Test Steps:
+  1. Navigate to "User Management" page
+  2. Enter search query "john" in search box
+  3. Apply filter: status="active"
+  4. Click "Search"
+Expected Results:
+  - HTTP 200 response with matching users
+  - Results show all users with "john" in username or full name
+  - Only active users displayed (suspended/pending excluded)
+  - Results paginated (20 per page)
+  - Each result shows: username, email, role, last login
+  - Total count displayed (e.g., "Found 3 users")
+Priority: MEDIUM
+Test Data: search_query=john, filter_status=active
+
+TEST SCENARIO 9: Password Reset Flow
+-------------------------------------
+Preconditions: User account exists with email "reset@example.com"
+Test Steps:
+  1. Click "Forgot Password?" link on login page
+  2. Enter email "reset@example.com"
+  3. Click "Send Reset Link"
+  4. User receives email with reset token
+  5. Click reset link (or copy token manually)
+  6. Enter new password "NewSecure123!"
+  7. Confirm new password "NewSecure123!"
+  8. Click "Reset Password"
+Expected Results:
+  - HTTP 200 response after email submission
+  - Reset email sent within 30 seconds
+  - Reset token valid for 1 hour
+  - HTTP 200 after password reset
+  - Password hash updated in database
+  - Success message: "Password reset successful"
+  - User can login with new password
+  - Old password no longer works
+  - Reset token invalidated after use
+Priority: HIGH
+Test Data: email=reset@example.com, new_password=NewSecure123!
+
+TEST SCENARIO 10: Moderator Suspends User Account
+--------------------------------------------------
+Preconditions: Logged in as moderator, target user is active
+Test Steps:
+  1. Moderator searches for user "spammer99"
+  2. Opens user profile
+  3. Clicks "Suspend Account" button
+  4. Enters suspension reason: "Violating community guidelines"
+  5. Selects duration: 7 days
+  6. Clicks "Confirm Suspension"
+Expected Results:
+  - HTTP 200 response
+  - User account status changed to "suspended"
+  - Suspension end date calculated (current_date + 7 days)
+  - Email notification sent to spammer99
+  - User cannot login (returns HTTP 403)
+  - Suspension logged in audit trail with moderator ID and reason
+  - Moderator sees confirmation: "User suspended for 7 days"
+Priority: MEDIUM
+Test Data: moderator_email=mod@example.com, target_user=spammer99, reason="Violating community guidelines", duration=7
+
+TEST SCENARIO 11: Upload Profile Picture
+-----------------------------------------
+Preconditions: User is logged in
+Test Steps:
+  1. Navigate to profile settings
+  2. Click "Change Profile Picture"
+  3. Select image file "avatar.jpg" (2.3 MB, 800x800px)
+  4. Crop image to square
+  5. Click "Upload"
+Expected Results:
+  - File validated (size < 5MB, format jpg/png)
+  - Image uploaded to storage
+  - Thumbnail generated (200x200px)
+  - Profile picture URL updated in database
+  - New picture displayed immediately on profile
+  - Old picture deleted from storage
+  - HTTP 200 response
+Priority: LOW
+Test Data: file=avatar.jpg, size=2.3MB, dimensions=800x800
+
+TEST SCENARIO 12: GDPR Data Export Request
+-------------------------------------------
+Preconditions: User is logged in
+Test Steps:
+  1. Navigate to "Privacy & Data" settings
+  2. Click "Request Data Export"
+  3. Confirm export request
+  4. Wait for export to complete
+Expected Results:
+  - HTTP 202 response with export_id
+  - Background job created to compile user data
+  - Email sent when export ready (within 24 hours)
+  - Download link valid for 7 days
+  - Export contains: profile data, activity logs, uploaded content
+  - Export format: ZIP with JSON files
+  - Status page shows "Processing" then "Ready"
+Priority: LOW
+Test Data: user_email=gdpr@example.com

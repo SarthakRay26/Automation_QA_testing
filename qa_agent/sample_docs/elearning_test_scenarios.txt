@@ -1,0 +1,245 @@
+E-LEARNING PLATFORM - TEST SCENARIOS
+=====================================
+
+TEST SCENARIO 1: Course Search and Filtering
+---------------------------------------------
+Preconditions: Multiple courses exist in different categories with varying prices
+Test Steps:
+  1. Navigate to course catalog page
+  2. Enter "Python" in search box
+  3. Select category filter "Technology"
+  4. Select level filter "Beginner"
+  5. Set price range: $0 - $50
+  6. Click "Apply Filters"
+Expected Results:
+  - Only courses matching all criteria displayed
+  - Results show course title, price, rating, instructor
+  - Pagination works if results > 12
+  - URL updates with filter parameters
+  - "Clear Filters" button appears
+  - Result count displayed (e.g., "24 courses found")
+Priority: HIGH
+Test Data: search="Python", category="Technology", level="Beginner", price_range="$0-$50"
+
+TEST SCENARIO 2: Free Course Enrollment
+----------------------------------------
+Preconditions: Student is logged in, course is free and published
+Test Steps:
+  1. Navigate to free course details page
+  2. Verify price shows "Free"
+  3. Click "Enroll Now" button
+  4. Confirm enrollment in modal dialog
+Expected Results:
+  - HTTP 200 response
+  - Instant enrollment without payment
+  - Redirected to first lecture
+  - Email confirmation sent
+  - Course appears in "My Learning" dashboard
+  - "Start Learning" button replaces "Enroll Now"
+  - Progress initialized at 0%
+Priority: HIGH
+Test Data: course_id=free_course_123, user_id=student_001
+
+TEST SCENARIO 3: Paid Course Enrollment with Coupon
+----------------------------------------------------
+Preconditions: Student logged in, course costs $49.99, valid coupon "SAVE25" exists (25% off)
+Test Steps:
+  1. Navigate to paid course page
+  2. Click "Enroll Now"
+  3. Enter coupon code "SAVE25" in checkout
+  4. Click "Apply Coupon"
+  5. Verify discounted price ($37.49)
+  6. Enter credit card details
+  7. Click "Complete Purchase"
+Expected Results:
+  - Coupon validation succeeds
+  - Original price: $49.99, Discount: -$12.50, Final: $37.49
+  - Payment processed successfully
+  - Order confirmation email with receipt
+  - Instant course access granted
+  - Invoice downloadable
+  - Coupon usage recorded
+Priority: HIGH
+Test Data: course_price=$49.99, coupon="SAVE25", discount=25%
+
+TEST SCENARIO 4: Video Lecture Playback and Progress Tracking
+--------------------------------------------------------------
+Preconditions: Student enrolled in course
+Test Steps:
+  1. Navigate to course curriculum
+  2. Click on Lecture 1 (video duration: 10 minutes)
+  3. Watch video for 5 minutes
+  4. Pause video
+  5. Close browser tab
+  6. Reopen course and resume
+Expected Results:
+  - Video starts from 00:00
+  - Progress saved at 5:00 mark
+  - On resume, video starts from 5:00
+  - Lecture marked as "In Progress" (not completed)
+  - After watching full 10 minutes, marked "Completed"
+  - Course completion % updated
+  - Auto-save progress every 30 seconds
+Priority: MEDIUM
+Test Data: lecture_id=video_lecture_001, duration=600 seconds
+
+TEST SCENARIO 5: Quiz Submission with Passing Score
+----------------------------------------------------
+Preconditions: Student enrolled, quiz has 10 questions, passing score 70%
+Test Steps:
+  1. Start quiz for Lecture 3
+  2. Answer 8 questions correctly, 2 incorrectly
+  3. Click "Submit Quiz"
+  4. Review results page
+Expected Results:
+  - Score calculated: 80%
+  - Status: "Passed" (green badge)
+  - Correct answers: 8/10
+  - Feedback shown for incorrect answers
+  - Quiz marked complete in curriculum
+  - Progress bar updated
+  - Certificate eligibility checked (if last assessment)
+  - Option to retake quiz available
+Priority: HIGH
+Test Data: quiz_id=quiz_003, total_questions=10, correct_answers=8, passing_score=70%
+
+TEST SCENARIO 6: Quiz Submission with Failing Score
+----------------------------------------------------
+Preconditions: Student on 1st attempt, max 3 attempts allowed
+Test Steps:
+  1. Start quiz
+  2. Answer 5 out of 10 questions correctly
+  3. Submit quiz
+Expected Results:
+  - Score: 50%
+  - Status: "Failed" (red badge)
+  - Message: "You need 70% to pass. You have 2 attempts remaining."
+  - "Retake Quiz" button enabled
+  - Previous attempt stored in history
+  - Quiz not marked complete
+  - Course progress unchanged
+Priority: MEDIUM
+Test Data: correct=5, total=10, score=50%, attempts_remaining=2
+
+TEST SCENARIO 7: Certificate Generation After Course Completion
+----------------------------------------------------------------
+Preconditions: Student completed 80%+ of course, passed all quizzes
+Test Steps:
+  1. Complete final lecture (pushes completion to 85%)
+  2. Navigate to course overview
+  3. Click "Get Certificate"
+Expected Results:
+  - Certificate auto-generated
+  - PDF contains: student name, course name, completion date, unique ID
+  - Certificate downloadable
+  - Shareable link generated
+  - Certificate appears in student's profile
+  - Email sent with certificate attached
+  - Certificate verifiable via unique ID
+Priority: HIGH
+Test Data: student="John Doe", course="Python Basics", completion_date="2025-11-21", cert_id="CERT-ABC-123"
+
+TEST SCENARIO 8: Course Review Submission
+------------------------------------------
+Preconditions: Student enrolled and completed at least 25% of course
+Test Steps:
+  1. Navigate to course page
+  2. Click "Leave a Review"
+  3. Select 5-star rating
+  4. Write review: "Excellent course! Learned a lot."
+  5. Click "Submit Review"
+Expected Results:
+  - Review posted successfully
+  - Review appears on course page
+  - Course average rating updated
+  - Review count incremented
+  - Student name and profile picture shown
+  - Cannot submit duplicate review
+  - Instructor notified of new review
+Priority: MEDIUM
+Test Data: rating=5, review_text="Excellent course! Learned a lot."
+
+TEST SCENARIO 9: Instructor Creates New Course
+-----------------------------------------------
+Preconditions: User has instructor role
+Test Steps:
+  1. Navigate to "Teach" dashboard
+  2. Click "Create New Course"
+  3. Fill in: Title="Web Development Bootcamp", Category="Technology", Level="Intermediate", Price=$99.99
+  4. Upload thumbnail image (1.5 MB jpg)
+  5. Write description (500 words)
+  6. Click "Save Draft"
+Expected Results:
+  - Course created with status "draft"
+  - Course ID generated
+  - Course appears in instructor's courses list
+  - "Edit Course" and "Add Curriculum" buttons available
+  - Course NOT visible to students yet
+  - Success message: "Course saved as draft"
+Priority: HIGH
+Test Data: title="Web Development Bootcamp", price=$99.99, level="Intermediate"
+
+TEST SCENARIO 10: Instructor Adds Video Lecture to Course
+----------------------------------------------------------
+Preconditions: Course created, instructor logged in
+Test Steps:
+  1. Open course curriculum editor
+  2. Click "Add Section"
+  3. Name section "Introduction"
+  4. Click "Add Lecture" under section
+  5. Title: "Welcome to the Course"
+  6. Upload video file (MP4, 50 MB, 15 minutes)
+  7. Wait for processing
+  8. Click "Save"
+Expected Results:
+  - Video uploaded successfully to cloud storage
+  - Processing status shown (0%, 50%, 100%)
+  - Thumbnail auto-generated
+  - Lecture added to section
+  - Duration displayed: "15:00"
+  - Video preview available
+  - Course content updated
+Priority: MEDIUM
+Test Data: video_file="intro.mp4", size=50MB, duration=900 seconds
+
+TEST SCENARIO 11: Student Q&A on Lecture
+-----------------------------------------
+Preconditions: Student enrolled in course
+Test Steps:
+  1. Open lecture page
+  2. Scroll to Q&A section
+  3. Click "Ask a Question"
+  4. Enter: "How do I install Python on Mac?"
+  5. Click "Post Question"
+  6. Another student or instructor posts answer
+  7. Original student upvotes answer
+Expected Results:
+  - Question posted with timestamp
+  - Email notification sent to instructor
+  - Answer appears under question
+  - Upvote count incremented
+  - Can mark answer as "Best Answer"
+  - Question searchable
+  - Subscribe to question updates
+Priority: LOW
+Test Data: question="How do I install Python on Mac?"
+
+TEST SCENARIO 12: Refund Request Processing
+--------------------------------------------
+Preconditions: Student purchased course 10 days ago (within 30-day window)
+Test Steps:
+  1. Navigate to "My Learning"
+  2. Open course dropdown menu
+  3. Click "Request Refund"
+  4. Select reason: "Not what I expected"
+  5. Confirm refund request
+Expected Results:
+  - Refund request submitted
+  - HTTP 200 response
+  - Course access revoked immediately
+  - Refund processed within 5-7 business days
+  - Confirmation email sent
+  - Revenue deducted from instructor account
+  - Course removed from student's learning dashboard
+Priority: MEDIUM
+Test Data: purchase_date="2025-11-11", refund_date="2025-11-21", course_price=$99.99

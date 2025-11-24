@@ -1,0 +1,274 @@
+{
+  "api_specification": {
+    "version": "2.0",
+    "base_url": "https://api.example.com/v2",
+    "authentication": "Bearer Token (JWT)",
+    "endpoints": [
+      {
+        "path": "/auth/register",
+        "method": "POST",
+        "description": "Register a new user account",
+        "request_body": {
+          "username": "string (3-20 chars)",
+          "email": "string (valid email)",
+          "password": "string (min 8 chars, 1 uppercase, 1 number, 1 special)",
+          "full_name": "string",
+          "terms_accepted": "boolean"
+        },
+        "responses": {
+          "201": {
+            "description": "User created successfully",
+            "body": {
+              "user_id": "uuid",
+              "username": "string",
+              "email": "string",
+              "verification_sent": "boolean"
+            }
+          },
+          "400": {
+            "description": "Validation error",
+            "body": {
+              "error": "string",
+              "field": "string"
+            }
+          },
+          "409": {
+            "description": "Email or username already exists"
+          }
+        }
+      },
+      {
+        "path": "/auth/login",
+        "method": "POST",
+        "description": "Authenticate user and get access token",
+        "request_body": {
+          "identifier": "string (email or username)",
+          "password": "string",
+          "remember_me": "boolean (optional)"
+        },
+        "responses": {
+          "200": {
+            "description": "Login successful",
+            "body": {
+              "access_token": "string (JWT)",
+              "refresh_token": "string",
+              "expires_in": "integer (seconds)",
+              "user": {
+                "id": "uuid",
+                "username": "string",
+                "email": "string",
+                "role": "string"
+              }
+            }
+          },
+          "401": {
+            "description": "Invalid credentials"
+          },
+          "423": {
+            "description": "Account locked due to failed attempts"
+          }
+        }
+      },
+      {
+        "path": "/auth/verify-email",
+        "method": "POST",
+        "description": "Verify email with verification code",
+        "request_body": {
+          "email": "string",
+          "verification_code": "string (6 digits)"
+        },
+        "responses": {
+          "200": {
+            "description": "Email verified successfully"
+          },
+          "400": {
+            "description": "Invalid or expired code"
+          }
+        }
+      },
+      {
+        "path": "/users/{user_id}",
+        "method": "GET",
+        "description": "Get user profile by ID",
+        "authentication_required": true,
+        "parameters": {
+          "user_id": "uuid (path parameter)"
+        },
+        "responses": {
+          "200": {
+            "description": "User profile retrieved",
+            "body": {
+              "id": "uuid",
+              "username": "string",
+              "full_name": "string",
+              "display_name": "string",
+              "bio": "string",
+              "profile_picture_url": "string",
+              "role": "string",
+              "created_at": "datetime",
+              "last_login": "datetime",
+              "email_verified": "boolean"
+            }
+          },
+          "403": {
+            "description": "Not authorized to view this profile"
+          },
+          "404": {
+            "description": "User not found"
+          }
+        }
+      },
+      {
+        "path": "/users/{user_id}",
+        "method": "PATCH",
+        "description": "Update user profile",
+        "authentication_required": true,
+        "request_body": {
+          "full_name": "string (optional)",
+          "display_name": "string (optional)",
+          "bio": "string (optional, max 500 chars)",
+          "phone": "string (optional)",
+          "date_of_birth": "date (optional)",
+          "location": {
+            "city": "string",
+            "country": "string"
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Profile updated successfully"
+          },
+          "400": {
+            "description": "Validation error"
+          },
+          "403": {
+            "description": "Not authorized to update this profile"
+          }
+        }
+      },
+      {
+        "path": "/users/search",
+        "method": "GET",
+        "description": "Search for users",
+        "authentication_required": true,
+        "query_parameters": {
+          "q": "string (search query)",
+          "role": "string (optional filter)",
+          "status": "string (optional: active, suspended, pending)",
+          "page": "integer (default: 1)",
+          "limit": "integer (default: 20, max: 100)"
+        },
+        "responses": {
+          "200": {
+            "description": "Search results",
+            "body": {
+              "users": "array of user objects",
+              "total": "integer",
+              "page": "integer",
+              "pages": "integer"
+            }
+          }
+        }
+      },
+      {
+        "path": "/users/{user_id}/role",
+        "method": "PUT",
+        "description": "Change user role (admin only)",
+        "authentication_required": true,
+        "required_role": "admin",
+        "request_body": {
+          "role": "string (admin, moderator, premium, regular, guest)"
+        },
+        "responses": {
+          "200": {
+            "description": "Role updated successfully"
+          },
+          "403": {
+            "description": "Insufficient permissions"
+          }
+        }
+      },
+      {
+        "path": "/users/{user_id}/suspend",
+        "method": "POST",
+        "description": "Suspend user account (admin/moderator)",
+        "authentication_required": true,
+        "required_role": "moderator",
+        "request_body": {
+          "reason": "string",
+          "duration_days": "integer (optional, permanent if not provided)"
+        },
+        "responses": {
+          "200": {
+            "description": "User suspended successfully"
+          },
+          "403": {
+            "description": "Insufficient permissions"
+          }
+        }
+      },
+      {
+        "path": "/users/{user_id}/data-export",
+        "method": "POST",
+        "description": "Request user data export (GDPR)",
+        "authentication_required": true,
+        "responses": {
+          "202": {
+            "description": "Export request accepted",
+            "body": {
+              "export_id": "uuid",
+              "estimated_time": "string",
+              "status": "processing"
+            }
+          }
+        }
+      },
+      {
+        "path": "/auth/password-reset",
+        "method": "POST",
+        "description": "Request password reset",
+        "request_body": {
+          "email": "string"
+        },
+        "responses": {
+          "200": {
+            "description": "Reset email sent if account exists"
+          }
+        }
+      },
+      {
+        "path": "/auth/password-reset/confirm",
+        "method": "POST",
+        "description": "Confirm password reset with token",
+        "request_body": {
+          "reset_token": "string",
+          "new_password": "string"
+        },
+        "responses": {
+          "200": {
+            "description": "Password reset successful"
+          },
+          "400": {
+            "description": "Invalid or expired token"
+          }
+        }
+      }
+    ],
+    "rate_limits": {
+      "authenticated": "100 requests per minute",
+      "unauthenticated": "20 requests per minute",
+      "login_attempts": "5 per 15 minutes per IP"
+    },
+    "error_codes": {
+      "1001": "Invalid email format",
+      "1002": "Password does not meet requirements",
+      "1003": "Username already taken",
+      "1004": "Email already registered",
+      "1005": "Account not verified",
+      "1006": "Account suspended",
+      "1007": "Invalid verification code",
+      "1008": "Rate limit exceeded",
+      "1009": "Insufficient permissions"
+    }
+  }
+}

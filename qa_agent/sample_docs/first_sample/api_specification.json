@@ -1,0 +1,55 @@
+{
+  "api_version": "1.0",
+  "endpoints": {
+    "apply_discount": {
+      "method": "POST",
+      "path": "/api/checkout/apply-discount",
+      "description": "Apply discount code to order",
+      "request": {
+        "discount_code": "string",
+        "order_id": "string"
+      },
+      "response": {
+        "success": "boolean",
+        "discount_amount": "number",
+        "new_total": "number",
+        "message": "string"
+      },
+      "valid_codes": ["SAVE10", "SAVE15", "SAVE20"]
+    },
+    "process_payment": {
+      "method": "POST",
+      "path": "/api/checkout/process-payment",
+      "description": "Process payment for order",
+      "request": {
+        "order_id": "string",
+        "payment_method": "string",
+        "card_number": "string",
+        "expiry": "string",
+        "cvv": "string",
+        "amount": "number"
+      },
+      "response": {
+        "success": "boolean",
+        "transaction_id": "string",
+        "confirmation_number": "string"
+      }
+    },
+    "validate_address": {
+      "method": "POST",
+      "path": "/api/checkout/validate-address",
+      "description": "Validate shipping address",
+      "request": {
+        "street": "string",
+        "city": "string",
+        "state": "string",
+        "postal_code": "string",
+        "country": "string"
+      },
+      "response": {
+        "valid": "boolean",
+        "suggestions": "array"
+      }
+    }
+  }
+}

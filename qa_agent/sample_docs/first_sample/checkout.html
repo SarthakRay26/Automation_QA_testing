@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Checkout - E-Commerce Store</title>
+</head>
+<body>
+    <div class="checkout-container">
+        <h1>Checkout</h1>
+        
+        <form id="checkout-form" action="/process-checkout" method="POST">
+            
+            <!-- Discount Code Section -->
+            <div class="discount-section">
+                <h2>Discount Code</h2>
+                <input type="text" 
+                       id="discount-code" 
+                       name="discount_code" 
+                       placeholder="Enter discount code"
+                       class="input-field">
+                <button type="button" 
+                        id="apply-discount" 
+                        class="btn-secondary">Apply Discount</button>
+                <span id="discount-message" class="message"></span>
+            </div>
+
+            <!-- Shipping Information -->
+            <div class="shipping-section">
+                <h2>Shipping Information</h2>
+                
+                <input type="text" 
+                       id="full-name" 
+                       name="full_name" 
+                       placeholder="Full Name*" 
+                       required 
+                       class="input-field">
+                
+                <input type="email" 
+                       id="email" 
+                       name="email" 
+                       placeholder="Email Address*" 
+                       required 
+                       class="input-field">
+                
+                <input type="tel" 
+                       id="phone" 
+                       name="phone" 
+                       placeholder="Phone Number*" 
+                       required 
+                       class="input-field">
+                
+                <input type="text" 
+                       id="address" 
+                       name="address" 
+                       placeholder="Street Address*" 
+                       required 
+                       class="input-field">
+                
+                <input type="text" 
+                       id="city" 
+                       name="city" 
+                       placeholder="City*" 
+                       required 
+                       class="input-field">
+                
+                <input type="text" 
+                       id="state" 
+                       name="state" 
+                       placeholder="State/Province*" 
+                       required 
+                       class="input-field">
+                
+                <input type="text" 
+                       id="postal-code" 
+                       name="postal_code" 
+                       placeholder="Postal Code*" 
+                       required 
+                       class="input-field">
+                
+                <select id="country" 
+                        name="country" 
+                        required 
+                        class="input-field">
+                    <option value="">Select Country*</option>
+                    <option value="US">United States</option>
+                    <option value="CA">Canada</option>
+                    <option value="UK">United Kingdom</option>
+                </select>
+            </div>
+
+            <!-- Payment Information -->
+            <div class="payment-section">
+                <h2>Payment Information</h2>
+                
+                <input type="text" 
+                       id="card-number" 
+                       name="card_number" 
+                       placeholder="Card Number*" 
+                       required 
+                       maxlength="16" 
+                       class="input-field">
+                
+                <input type="text" 
+                       id="card-name" 
+                       name="card_name" 
+                       placeholder="Cardholder Name*" 
+                       required 
+                       class="input-field">
+                
+                <input type="text" 
+                       id="expiry-date" 
+                       name="expiry_date" 
+                       placeholder="MM/YY*" 
+                       required 
+                       maxlength="5" 
+                       class="input-field">
+                
+                <input type="text" 
+                       id="cvv" 
+                       name="cvv" 
+                       placeholder="CVV*" 
+                       required 
+                       maxlength="3" 
+                       class="input-field">
+            </div>
+
+            <!-- Order Summary -->
+            <div class="order-summary">
+                <h2>Order Summary</h2>
+                <div id="order-items"></div>
+                <div class="totals">
+                    <div class="subtotal">
+                        <span>Subtotal:</span>
+                        <span id="subtotal-amount">$0.00</span>
+                    </div>
+                    <div class="discount" id="discount-display" style="display:none;">
+                        <span>Discount:</span>
+                        <span id="discount-amount">-$0.00</span>
+                    </div>
+                    <div class="shipping">
+                        <span>Shipping:</span>
+                        <span id="shipping-amount">$0.00</span>
+                    </div>
+                    <div class="tax">
+                        <span>Tax:</span>
+                        <span id="tax-amount">$0.00</span>
+                    </div>
+                    <div class="total">
+                        <span>Total:</span>
+                        <span id="total-amount">$0.00</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Submit Button -->
+            <button type="submit" 
+                    id="submit-order" 
+                    class="btn-primary">Complete Order</button>
+            
+            <div id="error-message" class="error-message" style="display:none;"></div>
+            <div id="loading-spinner" class="spinner" style="display:none;">Processing...</div>
+        </form>
+    </div>
+</body>
+</html>
