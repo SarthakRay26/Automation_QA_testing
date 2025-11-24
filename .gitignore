@@ -54,6 +54,9 @@ env/
 .env.local
 .env.*.local
 
+# Streamlit secrets
+.streamlit/secrets.toml
+
 # Logs
 *.log
 nohup.out

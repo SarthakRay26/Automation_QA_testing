@@ -1,0 +1,14 @@
+# Streamlit Cloud Requirements
+# Core dependencies for the Autonomous QA Agent
+
+# Web Framework
+streamlit>=1.50.0
+
+# HTTP Requests
+requests>=2.31.0
+
+# Selenium for local testing (optional)
+selenium>=4.15.0
+
+# Data handling
+python-dotenv>=1.0.0
