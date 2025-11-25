@@ -64,7 +64,7 @@ app.use((err, req, res, next) => {
 });
 
 // Start server
-app.listen(PORT, () => {
+const server = app.listen(PORT, () => {
   console.log('\n' + '='.repeat(60));
   console.log('🚀 GitHub Actions Test Runner API');
   console.log('='.repeat(60));
