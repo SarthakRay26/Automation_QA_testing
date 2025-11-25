@@ -10,9 +10,9 @@ import os
 def test_tc_001():
     """
     Test Case: TC-001
-    Feature: Basic generate test cases for coupon code validation Functionality
-    Scenario: Verify that generate test cases for coupon code validation works as expected
-    Expected Result: System should successfully handle generate test cases for coupon code validation
+    Feature: Basic Generate test cases for coupon validation  Functionality
+    Scenario: Verify that Generate test cases for coupon validation  works as expected
+    Expected Result: System should successfully handle Generate test cases for coupon validation
     """
     
     print("=" * 60)
@@ -70,7 +70,7 @@ def test_tc_001():
         # Wait for response
         time.sleep(2)
         
-        # Verify expected result: System should successfully handle generate test cases for coupon code validation
+        # Verify expected result: System should successfully handle Generate test cases for coupon validation
         print("\n🔍 Verifying test assertions...")
         
         # Verify coupon/discount was applied
@@ -91,7 +91,7 @@ def test_tc_001():
         
         print("\n" + "=" * 60)
         print(f"✅ Test TC-001 PASSED!")
-        print(f"Expected: System should successfully handle generate test cases for coupon code validation")
+        print(f"Expected: System should successfully handle Generate test cases for coupon validation")
         print("=" * 60)
         
         # Take success screenshot

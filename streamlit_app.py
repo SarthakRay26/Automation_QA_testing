@@ -31,7 +31,10 @@ if 'test_id' not in st.session_state:
 
 # GitHub Actions Backend URL (keep Node.js backend separate or deploy on another service)
 # For Streamlit Cloud, you'll need to deploy the Node.js backend separately (e.g., Railway, Render, Heroku)
-GITHUB_BACKEND_URL = os.getenv("GITHUB_BACKEND_URL", "http://localhost:5000")
+try:
+    GITHUB_BACKEND_URL = st.secrets.get("GITHUB_BACKEND_URL", os.getenv("GITHUB_BACKEND_URL", "http://localhost:5000"))
+except:
+    GITHUB_BACKEND_URL = os.getenv("GITHUB_BACKEND_URL", "http://localhost:5000")
 
 
 def get_github_credentials():
