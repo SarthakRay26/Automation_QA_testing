@@ -6,6 +6,7 @@ Provides a user-friendly interface for document upload, test case generation, an
 import streamlit as st
 import requests
 import json
+import os
 from typing import List, Dict, Any
 from pathlib import Path
 
@@ -16,14 +17,15 @@ st.set_page_config(
     layout="wide"
 )
 
-# API Base URL
-API_BASE_URL = "http://localhost:8000"
+# API Base URLs - configurable via environment variables
+FASTAPI_BASE_URL = os.getenv("FASTAPI_BASE_URL", "http://localhost:8000")
+GITHUB_ACTIONS_BASE_URL = os.getenv("GITHUB_ACTIONS_BASE_URL", "https://automatic-qa-test-9d45ce9dd223.herokuapp.com")
 
 
 def check_api_health():
     """Check if the API is running."""
     try:
-        response = requests.get(f"{API_BASE_URL}/health", timeout=5)
+        response = requests.get(f"{FASTAPI_BASE_URL}/health", timeout=5)
         return response.status_code == 200
     except:
         return False
@@ -32,27 +34,27 @@ def check_api_health():
 def upload_documents(files):
     """Upload documents to the backend."""
     files_data = [("files", (file.name, file, file.type)) for file in files]
-    response = requests.post(f"{API_BASE_URL}/upload_documents", files=files_data)
+    response = requests.post(f"{FASTAPI_BASE_URL}/upload_documents", files=files_data)
     return response.json()
 
 
 def upload_html(file):
     """Upload HTML file to the backend."""
     files_data = {"file": (file.name, file, file.type)}
-    response = requests.post(f"{API_BASE_URL}/upload_html", files=files_data)
+    response = requests.post(f"{FASTAPI_BASE_URL}/upload_html", files=files_data)
     return response.json()
 
 
 def build_knowledge_base():
     """Build the knowledge base."""
-    response = requests.post(f"{API_BASE_URL}/build_knowledge_base")
+    response = requests.post(f"{FASTAPI_BASE_URL}/build_knowledge_base")
     return response.json()
 
 
 def generate_test_cases(query: str, n_results: int = 5):
     """Generate test cases."""
     response = requests.post(
-        f"{API_BASE_URL}/generate_test_cases",
+        f"{FASTAPI_BASE_URL}/generate_test_cases",
         json={"query": query, "n_results": n_results}
     )
     return response.json()
@@ -61,7 +63,7 @@ def generate_test_cases(query: str, n_results: int = 5):
 def generate_selenium_script(test_case: Dict[str, Any]):
     """Generate Selenium script for a test case."""
     response = requests.post(
-        f"{API_BASE_URL}/generate_selenium_script",
+        f"{FASTAPI_BASE_URL}/generate_selenium_script",
         json={"test_case": test_case}
     )
     return response.json()
@@ -69,13 +71,13 @@ def generate_selenium_script(test_case: Dict[str, Any]):
 
 def get_test_cases():
     """Get all generated test cases."""
-    response = requests.get(f"{API_BASE_URL}/test_cases")
+    response = requests.get(f"{FASTAPI_BASE_URL}/test_cases")
     return response.json()
 
 
 def reset_system():
     """Reset the system."""
-    response = requests.delete(f"{API_BASE_URL}/reset")
+    response = requests.delete(f"{FASTAPI_BASE_URL}/reset")
     return response.json()
 
 
@@ -84,20 +86,49 @@ def main():
     st.title("🤖 Autonomous QA Agent")
     st.markdown("### RAG-based Test Case & Selenium Script Generator")
     
-    # Check API health
-    if not check_api_health():
-        st.error("⚠️ Backend API is not running! Please start the FastAPI server.")
-        st.code("cd qa_agent && python -m backend.main", language="bash")
-        return
+    # Display backend configuration
+    with st.expander("⚙️ Backend Configuration", expanded=False):
+        st.code(f"FastAPI Backend: {FASTAPI_BASE_URL}", language="text")
+        st.code(f"GitHub Actions Backend: {GITHUB_ACTIONS_BASE_URL}", language="text")
     
-    st.success("✅ Backend API is running")
+    # Check FastAPI health
+    fastapi_healthy = check_api_health()
+    
+    # Check GitHub Actions backend health
+    github_actions_healthy = False
+    try:
+        gh_response = requests.get(f"{GITHUB_ACTIONS_BASE_URL}/health", timeout=5)
+        github_actions_healthy = gh_response.status_code == 200
+    except:
+        pass
+    
+    # Display status
+    col1, col2 = st.columns(2)
+    with col1:
+        if fastapi_healthy:
+            st.success("✅ FastAPI Backend: Running")
+        else:
+            st.error("❌ FastAPI Backend: Offline")
+            st.caption("Start with: `cd qa_agent && python -m backend.main`")
+    
+    with col2:
+        if github_actions_healthy:
+            st.success("✅ GitHub Actions Backend: Running")
+        else:
+            st.warning("⚠️ GitHub Actions Backend: Offline")
+            st.caption("GitHub test execution will not work")
+    
+    # Show error if FastAPI is not running
+    if not fastapi_healthy:
+        st.warning("⚠️ FastAPI backend is required for document processing and test generation.")
+        return
     
     # Sidebar
     with st.sidebar:
         st.header("📊 System Status")
         
         try:
-            health = requests.get(f"{API_BASE_URL}/health").json()
+            health = requests.get(f"{FASTAPI_BASE_URL}/health").json()
             st.metric("Documents Loaded", health.get("documents_loaded", 0))
             st.metric("Test Cases Generated", health.get("test_cases_generated", 0))
             st.write(f"**HTML Loaded:** {'✅' if health.get('html_loaded') else '❌'}")
@@ -440,8 +471,8 @@ def main():
                                 progress_bar.progress(20)
                                 
                                 response = requests.post(
-                                    f"{API_BASE_URL}/run_selenium_on_github",
-                                    json={"test_id": test_id, "script": script},
+                                    f"{GITHUB_ACTIONS_BASE_URL}/api/create-test-run",
+                                    json={"testScript": script, "testName": test_id},
                                     timeout=30
                                 )
                                 
@@ -463,7 +494,7 @@ def main():
                                     for i in range(max_polls):
                                         time.sleep(5)
                                         try:
-                                            status_resp = requests.get(f"{API_BASE_URL}/github_run_status/{run_id}", timeout=10)
+                                            status_resp = requests.get(f"{GITHUB_ACTIONS_BASE_URL}/api/status/{run_id}", timeout=10)
                                             if status_resp.status_code == 200:
                                                 data = status_resp.json()
                                                 if data.get("status") == "completed":
@@ -477,7 +508,7 @@ def main():
                                                         st.warning(f"⚠️ Workflow: {data.get('conclusion')}")
                                                     
                                                     # Get logs and job details
-                                                    logs_resp = requests.get(f"{API_BASE_URL}/github_run_logs/{run_id}", timeout=30)
+                                                    logs_resp = requests.get(f"{GITHUB_ACTIONS_BASE_URL}/api/logs/{run_id}", timeout=30)
                                                     if logs_resp.status_code == 200:
                                                         logs_data = logs_resp.json()
                                                         
@@ -515,7 +546,7 @@ def main():
                                                         # Fetch and display artifacts
                                                         st.subheader("📎 Test Artifacts")
                                                         try:
-                                                            artifacts_resp = requests.get(f"{API_BASE_URL}/github_run_artifacts/{run_id}", timeout=10)
+                                                            artifacts_resp = requests.get(f"{GITHUB_ACTIONS_BASE_URL}/api/artifacts/{run_id}", timeout=10)
                                                             if artifacts_resp.status_code == 200:
                                                                 artifacts_data = artifacts_resp.json()
                                                                 artifacts = artifacts_data.get("artifacts", [])
