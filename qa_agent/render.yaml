@@ -1,0 +1,18 @@
+services:
+  - type: web
+    name: qa-fastapi-backend
+    runtime: python
+    plan: starter  # Requires paid plan due to heavy ML dependencies
+    rootDir: qa_agent/backend
+    buildCommand: pip install -r ../requirements.txt
+    startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: PYTHONUNBUFFERED
+        value: "1"
+      - key: PORT
+        value: "8000"
+    healthCheckPath: /health
+    disk:
+      name: chromadb-storage
+      mountPath: /opt/render/project/src/chroma_db
+      sizeGB: 1
